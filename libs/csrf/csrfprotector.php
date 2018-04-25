@@ -259,6 +259,31 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				return $_SERVER[self::$tokenHeaderKey];
 			}
 
+			if (isset($_SERVER["HTTP_REFERER"]) && empty(self::$config['referers'])) {
+				if (self::strpos_array($_SERVER["HTTP_REFERER"], self::$config['referers'])) {
+					return $_COOKIE[self::$config['CSRFP_TOKEN']];
+				}
+			}
+
+			return false;
+		}
+
+		/**
+		 * @param $haystack
+		 * @param $needle
+		 * @param int $offset
+		 * @return bool
+		 */
+		private static function strpos_array($haystack, $needle, $offset = 0)
+		{
+			if (!is_array($needle)) {
+				$needle = [$needle];
+			}
+			foreach ($needle as $query) {
+				if (strpos($haystack, $query, $offset) !== false) {
+					return true;
+				}
+			}
 			return false;
 		}
 

@@ -259,7 +259,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				return $_SERVER[self::$tokenHeaderKey];
 			}
 
-			if (isset($_SERVER["HTTP_REFERER"]) && empty(self::$config['referers'])) {
+			if (isset($_SERVER["HTTP_REFERER"]) && empty(self::$config['referers']) === false) {
 				if (self::strpos_array($_SERVER["HTTP_REFERER"], self::$config['referers'])) {
 					return $_COOKIE[self::$config['CSRFP_TOKEN']];
 				}

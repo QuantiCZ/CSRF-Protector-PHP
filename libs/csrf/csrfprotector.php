@@ -266,10 +266,12 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			}
 
 			if (isset($_SERVER["HTTP_USER_AGENT"]) && empty(self::$config['agentURIs']) === false) {
-				if (isset(self::$config['agentURIs'][$_SERVER["HTTP_USER_AGENT"]])) {
-					if ($_SERVER["REQUEST_URI"] == self::$config['agentURIs'][$_SERVER["HTTP_USER_AGENT"]]) {
-						return $_COOKIE[self::$config['CSRFP_TOKEN']];
-					}
+				$config = self::$config['agentURIs'];
+				$userAgent = $_SERVER["HTTP_USER_AGENT"];
+				$requestUri = $_SERVER["REQUEST_URI"];
+
+				if (isset($config[$userAgent]) && $config[$userAgent] == $requestUri) {
+					return $_COOKIE[self::$config['CSRFP_TOKEN']];
 				}
 			}
 

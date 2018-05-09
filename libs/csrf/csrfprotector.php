@@ -206,17 +206,24 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				//set request type to POST
 				self::$requestType = "POST";
 
-				// look for token in payload else from header
-				$token = self::getTokenFromRequest();
-
-				//currently for same origin only
-				if (!($token && isset($_SESSION[self::$config['CSRFP_TOKEN']])
-					&& (self::isValidToken($token)))) {
-
-					//action in case of failed validation
-					self::failedValidationAction();
+				$config = self::$config['agentURIs'];
+				$userAgent = $_SERVER["HTTP_USER_AGENT"];
+				$requestUri = $_SERVER["REQUEST_URI"];
+				if (isset($config[$userAgent]) && $config[$userAgent] == $requestUri) {
+					self::refreshToken();
 				} else {
-					self::refreshToken();    //refresh token for successful validation
+					// look for token in payload else from header
+					$token = self::getTokenFromRequest();
+
+					//currently for same origin only
+					if (!($token && isset($_SESSION[self::$config['CSRFP_TOKEN']])
+						&& (self::isValidToken($token)))) {
+
+						//action in case of failed validation
+						self::failedValidationAction();
+					} else {
+						self::refreshToken();    //refresh token for successful validation
+					}
 				}
 			} else {
 				if (!static::isURLallowed()) {
@@ -261,16 +268,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 
 			if (isset($_SERVER["HTTP_REFERER"]) && empty(self::$config['referers']) === false) {
 				if (self::strpos_array($_SERVER["HTTP_REFERER"], self::$config['referers'])) {
-					return $_COOKIE[self::$config['CSRFP_TOKEN']];
-				}
-			}
-
-			if (isset($_SERVER["HTTP_USER_AGENT"]) && empty(self::$config['agentURIs']) === false) {
-				$config = self::$config['agentURIs'];
-				$userAgent = $_SERVER["HTTP_USER_AGENT"];
-				$requestUri = $_SERVER["REQUEST_URI"];
-
-				if (isset($config[$userAgent]) && $config[$userAgent] == $requestUri) {
 					return $_COOKIE[self::$config['CSRFP_TOKEN']];
 				}
 			}

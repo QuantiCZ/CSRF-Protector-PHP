@@ -546,14 +546,23 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		public static function isURLPostAllowed()
 		{
-			foreach (self::$config['verifyGetForPost'] as $key => $value) {
+			/*foreach (self::$config['verifyGetForPost'] as $key => $value) {
 				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
 				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);
 				if (count($output) > 0) {
 					return true;
 				}
 			}
-			return false;
+			return false;*/
+
+			foreach (self::$config['verifyGetForPost'] as $key => $value) {
+				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
+				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);
+				if (count($output) > 0) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 }

@@ -220,7 +220,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 						&& (self::isValidToken($token)))) {
 
 						//action in case of failed validation
-						self::failedValidationAction();
+						self::failedValidationAction('POST');
 					} else {
 						self::refreshToken();    //refresh token for successful validation
 					}
@@ -234,7 +234,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 					)) {
 
 						//action in case of failed validation
-						self::failedValidationAction();
+						self::failedValidationAction('GET');
 					} else {
 						self::refreshToken();    //refresh token for successful validation
 					}
@@ -323,7 +323,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			return false;
 		}
 
-		private static function failedValidationAction()
+		private static function failedValidationAction($method)
 		{
 			//call the logging function
 			static::logCSRFattack();
@@ -334,7 +334,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				case csrfpAction::ForbiddenResponseAction:
 					//send 403 header
 					header('HTTP/1.0 403 Forbidden');
-					exit("<h2>403 Access Forbidden by CSRFProtector!</h2>");
+					exit("<h2>403 Access Forbidden by CSRFProtector (" . $method . ")!</h2>");
 					break;
 				case csrfpAction::ClearParametersAction:
 					//unset the query parameters and forward

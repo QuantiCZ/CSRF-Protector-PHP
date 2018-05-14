@@ -1,4 +1,4 @@
-/** 
+/**
  * =================================================================
  * Javascript code for OWASP CSRF Protector
  * Task it does: Fetch csrftoken from cookie, and attach it to every
@@ -51,13 +51,13 @@ var CSRFP = {
 	_getAuthKey: function() {
 		var re = new RegExp(CSRFP.CSRFP_TOKEN +"=([^;]+)(;|$)");
 		var RegExpArray = re.exec(document.cookie);
-		
+
 		if (RegExpArray === null) {
 			return false;
 		}
 		return RegExpArray[1];
 	},
-	/** 
+	/**
 	 * Function to get domain of any url
 	 *
 	 * @param {string} url
@@ -65,7 +65,7 @@ var CSRFP = {
 	 * @return {string} domain of url
 	 */
 	_getDomain: function(url) {
-		if (url.indexOf("http://") !== 0 
+		if (url.indexOf("http://") !== 0
 			&& url.indexOf("https://") !== 0)
 			return document.domain;
 		return /http(s)?:\/\/([^\/]+)/.exec(url)[2];
@@ -99,8 +99,8 @@ var CSRFP = {
 		var parts = relative.split("/");
 		// remove current file name (or empty string)
 		// (omit if "base" is the current folder without trailing slash)
-		stack.pop(); 
-			 
+		stack.pop();
+
 		for (var i = 0; i < parts.length; i++) {
 			if (parts[i] === ".")
 				continue;
@@ -126,13 +126,13 @@ var CSRFP = {
 				var target = obj[CSRFP.CSRFP_TOKEN];
 				target.parentNode.removeChild(target);
 			}
-			
+
 			// Trigger the functions
 			var result = fun.apply(this, [event]);
-			
+
 			// Now append the csrfp_token back
 			obj.appendChild(CSRFP._getInputElt());
-			
+
 			return result;
 		};
 	},
@@ -155,167 +155,46 @@ var CSRFP = {
 		//convert these rules received from php lib to regex objects
 		for (var i = 0; i < CSRFP.checkForUrls.length; i++) {
 			CSRFP.checkForUrls[i] = CSRFP.checkForUrls[i].replace(/\*/g, '(.*)')
-								.replace(/\//g, "\\/");
+				.replace(/\//g, "\\/");
 			CSRFP.checkForUrls[i] = new RegExp(CSRFP.checkForUrls[i]);
 		}
-	
+
 	}
-	
-}; 
+
+};
 
 //==========================================================
 // Adding tokens, wrappers on window onload
 //==========================================================
 
 function csrfprotector_init() {
-	
+
 	// Call the init function
 	CSRFP._init();
 
-	// definition of basic FORM submit event handler to intercept the form request
-	// and attach a CSRFP TOKEN if it's not already available
-	var BasicSubmitInterceptor = function(event) {
-		if (typeof event.target[CSRFP.CSRFP_TOKEN] === 'undefined') {
-			event.target.appendChild(CSRFP._getInputElt());
+	$(document).on('submit', 'form', function () {
+		var form = $(this);
+		var csrfInput = form.find("input[name=" + CSRFP.CSRFP_TOKEN + "]");
+		if (csrfInput.length > 0) {
+			csrfInput.val(CSRFP._getAuthKey());
 		} else {
-			//modify token to latest value
-			event.target[CSRFP.CSRFP_TOKEN].value = CSRFP._getAuthKey();
-		}
-	};
-
-	//==================================================================
-	// Adding csrftoken to request resulting from <form> submissions
-	// Add for each POST, while for mentioned GET request
-	// TODO - check for method
-	//==================================================================
-	// run time binding
-	document.querySelector('body').addEventListener('submit', function(event) {
-		if (event.target.tagName.toLowerCase() === 'form') {
-			BasicSubmitInterceptor(event);
+			form.append(CSRFP._getInputElt());
 		}
 	});
 
-	// initial binding
-	// for(var i = 0; i < document.forms.length; i++) {
-	// 	document.forms[i].addEventListener("submit", BasicSubmitInterceptor);
-	// }
-
-	//==================================================================
-	// Adding csrftoken to request resulting from direct form.submit() call
-	// Add for each POST, while for mentioned GET request
-	// TODO - check for form method
-	//==================================================================
-	HTMLFormElement.prototype.submit_ = HTMLFormElement.prototype.submit;
-	HTMLFormElement.prototype.submit = function() {
-		// check if the FORM already contains the token element
-		if (!this.getElementsByClassName(CSRFP.CSRFP_TOKEN).length)
-			this.appendChild(CSRFP._getInputElt());
-		this.submit_();
-	};
-
-
-	/**
-	 * Add wrapper for HTMLFormElements addEventListener so that any further 
-	 * addEventListens won't have trouble with CSRF token
-	 * todo - check for method
-	 */
-	HTMLFormElement.prototype.addEventListener_ = HTMLFormElement.prototype.addEventListener;
-	HTMLFormElement.prototype.addEventListener = function(eventType, fun, bubble) {
-		if (eventType === 'submit') {
-			var wrapped = CSRFP._csrfpWrap(fun, this);
-			this.addEventListener_(eventType, wrapped, bubble);
-		} else {
-			this.addEventListener_(eventType, fun, bubble);
-		}	
-	};
-
-	/**
-	 * Add wrapper for IE's attachEvent
-	 * todo - check for method
-	 * todo - typeof is now obsolete for IE 11, use some other method.
-	 */
-	if (typeof HTMLFormElement.prototype.attachEvent !== 'undefined') {
-		HTMLFormElement.prototype.attachEvent_ = HTMLFormElement.prototype.attachEvent;
-		HTMLFormElement.prototype.attachEvent = function(eventType, fun) {
-			if (eventType === 'onsubmit') {
-				var wrapped = CSRFP._csrfpWrap(fun, this);
-				this.attachEvent_(eventType, wrapped);
-			} else {
-				this.attachEvent_(eventType, fun);
-			}
+	$.ajaxSetup({
+		beforeSend: function(xhr, settings) {
+			xhr.setRequestHeader('HTTP_' + CSRFP.CSRFP_TOKEN, CSRFP._getAuthKey());
 		}
-	}
+	});
 
-
-	//==================================================================
-	// Wrapper for XMLHttpRequest & ActiveXObject (for IE 6 & below)
-	// Set X-No-CSRF to true before sending if request method is 
-	//==================================================================
-
-	/** 
-	 * Wrapper to XHR open method
-	 * Add a property method to XMLHttpRequest class
-	 * @param: all parameters to XHR open method
-	 * @return: object returned by default, XHR open method
-	 */
-	function new_open(method, url, async, username, password) {
-		this.method = method;
-		var isAbsolute = (url.indexOf("./") === -1);
-		if (!isAbsolute) {
-			var base = location.protocol +'//' +location.host 
-							+ location.pathname;
-			url = CSRFP._getAbsolutePath(base, url);
+	$.ajaxPrefilter(function (options, originalOptions, jqXHR){
+		var url = options.url;
+		if (url.match(/csrfToken/) === null) {
+			var start = (url.match(/\?/) ? '&' : '?');
+			options.url = options.url + start + 'csrfToken=' + CSRFP._getAuthKey();
 		}
-		if (method.toLowerCase() === 'get' 
-			&& !CSRFP._isValidGetRequest(url)) {
-			//modify the url
-			if (url.indexOf('?') === -1) {
-				url += "?" +CSRFP.CSRFP_TOKEN +"=" +CSRFP._getAuthKey();
-			} else {
-				url += "&" +CSRFP.CSRFP_TOKEN +"=" +CSRFP._getAuthKey();
-			}
-		}
-
-		return this.old_open(method, url, async, username, password);
-	}
-
-	/** 
-	 * Wrapper to XHR send method
-	 * Add query parameter to XHR object
-	 *
-	 * @param: all parameters to XHR send method
-	 *
-	 * @return: object returned by default, XHR send method
-	 */
-	function new_send(data) {
-		if (this.method.toLowerCase() === 'post') {
-			// attach the token in request header
-			this.setRequestHeader(CSRFP.CSRFP_TOKEN, CSRFP._getAuthKey());
-		}
-		return this.old_send(data);
-	}
-
-	if (window.XMLHttpRequest) {
-		// Wrapping
-		XMLHttpRequest.prototype.old_send = XMLHttpRequest.prototype.send;
-		XMLHttpRequest.prototype.old_open = XMLHttpRequest.prototype.open;
-		XMLHttpRequest.prototype.open = new_open;
-		XMLHttpRequest.prototype.send = new_send;
-	}
-	if (typeof ActiveXObject !== 'undefined') {
-		ActiveXObject.prototype.old_send = ActiveXObject.prototype.send;
-		ActiveXObject.prototype.old_open = ActiveXObject.prototype.open;
-		ActiveXObject.prototype.open = new_open;
-		ActiveXObject.prototype.send = new_send;	
-	}
-	//==================================================================
-	// Rewrite existing urls ( Attach CSRF token )
-	// Rules:
-	// Rewrite those urls which matches the regex sent by Server
-	// Ignore cross origin urls & internal links (one with hashtags)
-	// Append the token to those url already containing GET query parameter(s)
-	// Add the token to those which does not contain GET query parameter(s)
-	//==================================================================
+	});
 
 	for (var i = 0; i < document.links.length; i++) {
 		document.links[i].addEventListener("mousedown", function(event) {

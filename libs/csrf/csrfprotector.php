@@ -272,6 +272,10 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				}
 			}
 
+			if (isset($_GET[self::$config['CSRFP_TOKEN']]) && static::isURLPostAllowed() === true) {
+				return $_GET[self::$config['CSRFP_TOKEN']];
+			}
+
 			return false;
 		}
 
@@ -535,6 +539,21 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				}
 			}
 			return true;
+		}
+
+		/**
+		 * @return bool
+		 */
+		public static function isURLPostAllowed()
+		{
+			foreach (self::$config['verifyGetForPost'] as $key => $value) {
+				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
+				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);
+				if (count($output) > 0) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 }

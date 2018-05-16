@@ -190,9 +190,10 @@ function csrfprotector_init() {
 
 	$.ajaxPrefilter(function (options, originalOptions, jqXHR){
 		var url = options.url;
-		if (url.match(/csrfToken/) === null) {
+		var urlMatch = new RegExp(CSRFP.CSRFP_TOKEN);
+		if (url.match(urlMatch) === null) {
 			var start = (url.match(/\?/) ? '&' : '?');
-			options.url = options.url + start + 'csrfToken=' + CSRFP._getAuthKey();
+			options.url = options.url + start + CSRFP.CSRFP_TOKEN + '=' + CSRFP._getAuthKey();
 		}
 	});
 

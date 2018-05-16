@@ -1,30 +1,25 @@
 <?php
-/**
- * Configuration file for CSRF Protector
- * Necessary configurations are (library would throw exception otherwise)
- * ---- logDirectory
- * ---- failedAuthAction
- * ---- jsUrl
- * ---- tokenLength
- */
+
 return array(
-	"CSRFP_TOKEN" => "",
-	"logDirectory" => "../log",
+	"CSRFP_TOKEN" => "csrfToken",
+	"logDirectory" => __DIR__ . "/../log",
 	"failedAuthAction" => array(
 		"GET" => 0,
-		"POST" => 0),
+		"POST" => 0
+	),
 	"errorRedirectionPage" => "",
 	"customErrorMessage" => "",
-	"jsUrl" => "",
-	"tokenLength" => 10,
+	"jsUrl" => "/csrf/csrfprotector.js",
+	"tokenLength" => 30,
 	"cookieConfig" => array(
 		"path" => '',
 		"domain" => '',
 		"secure" => false,
-		"expire" => '',
+		"expire" => 90*60,
 	),
-	"disabledJavascriptMessage" => "This site attempts to protect users against <a href=\"https://www.owasp.org/index.php/Cross-Site_Request_Forgery_%28CSRF%29\">
-	Cross-Site Request Forgeries </a> attacks. In order to do so, you must have JavaScript enabled in your web browser otherwise this site will fail to work correctly for you.
-	 See details of your web browser for how to enable JavaScript.",
-	 "verifyGetFor" => array()
+	"disabledJavascriptMessage" => "This site attempts to protect users against Cross-Site Request Forgeries attacks.",
+	"verifyGetForPost" => array(),
+	"verifyGetFor" => array(),
+	"referers" => array(),
+	"agentURIs" => array(),
 );

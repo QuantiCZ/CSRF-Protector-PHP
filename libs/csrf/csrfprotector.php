@@ -17,23 +17,25 @@ if (!defined('__CSRF_PROTECTOR__')) {
 	define("CSRFP_FIELD_URLS", "csrfp_hidden_data_urls");
 
 	class configFileNotFoundException extends \Exception {}
+
 	class jsFileNotFoundException extends \Exception {}
+
 	class baseJSFileNotFoundExceptio extends \Exception {}
+
 	class incompleteConfigurationException extends \Exception {}
+
 	class alreadyInitializedException extends \Exception {}
 
 	class csrfProtector
 	{
 		/**
-		 * Variable: $isValidHTML
-		 * flag to check if output file is a valid HTML or not
+		 * Flag to check if output file is a valid HTML or not
 		 *
 		 * @var bool
 		 */
 		private static $isValidHTML = false;
 
 		/**
-		 * Variable: $cookieConfig
 		 * Array of parameters for the setcookie method
 		 *
 		 * @var array<any>
@@ -41,7 +43,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		private static $cookieConfig = null;
 
 		/**
-		 * Variable: $logger
 		 * Logger class object
 		 *
 		 * @var LoggerInterface
@@ -49,7 +50,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		private static $logger = null;
 
 		/**
-		 * Variable: $tokenHeaderKey
 		 * Key value in header array, which contain the token
 		 *
 		 * @var string
@@ -57,7 +57,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		private static $tokenHeaderKey = null;
 
 		/**
-		 * Variable: $requestType
 		 * Variable to store whether request type is post or get
 		 *
 		 * @var string
@@ -546,15 +545,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		public static function isURLPostAllowed()
 		{
-			/*foreach (self::$config['verifyGetForPost'] as $key => $value) {
-				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
-				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);
-				if (count($output) > 0) {
-					return true;
-				}
-			}
-			return false;*/
-
 			foreach (self::$config['verifyGetForPost'] as $key => $value) {
 				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
 				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);

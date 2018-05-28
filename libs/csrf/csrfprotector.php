@@ -1,4 +1,6 @@
 <?php
+
+include __DIR__ . "/../../vendor/autoload.php";
 include __DIR__ . "/csrfpCookieConfig.php";
 include __DIR__ . "/csrfpDefaultLogger.php";
 include __DIR__ . "/csrfpAction.php";
@@ -55,6 +57,11 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 * @var string
 		 */
 		private static $tokenHeaderKey = null;
+
+		/**
+		 * @var \Predis\Client
+		 */
+		private static $redisClient;
 
 		/**
 		 * Variable to store whether request type is post or get
@@ -186,11 +193,11 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				ob_start('csrfProtector::ob_handler');
 			}
 
-			if (!isset($_COOKIE[self::$config['CSRFP_TOKEN']])
-				|| !isset($_SESSION[self::$config['CSRFP_TOKEN']])
-				|| !is_array($_SESSION[self::$config['CSRFP_TOKEN']])
-				|| !in_array($_COOKIE[self::$config['CSRFP_TOKEN']],
-					$_SESSION[self::$config['CSRFP_TOKEN']])) {
+			if (isset($_COOKIE[self::$config['CSRFP_TOKEN']]) === false
+				|| self::issetSession() === false
+				|| self::getSessionValue() === false
+				|| in_array($_COOKIE[self::$config['CSRFP_TOKEN']], self::getSessionValue()) === false)
+			{
 				self::refreshToken();
 			}
 		}
@@ -215,9 +222,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 					$token = self::getTokenFromRequest();
 
 					//currently for same origin only
-					if (!($token && isset($_SESSION[self::$config['CSRFP_TOKEN']])
-						&& (self::isValidToken($token)))) {
-
+					if (!($token && self::issetSession() && (self::isValidToken($token)))) {
 						//action in case of failed validation
 						self::failedValidationAction('POST');
 					} else {
@@ -228,10 +233,9 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				if (!static::isURLallowed()) {
 					//currently for same origin only
 					if (!(isset($_GET[self::$config['CSRFP_TOKEN']])
-						&& isset($_SESSION[self::$config['CSRFP_TOKEN']])
+						&& self::issetSession()
 						&& (self::isValidToken($_GET[self::$config['CSRFP_TOKEN']]))
 					)) {
-
 						//action in case of failed validation
 						self::failedValidationAction('GET');
 					} else {
@@ -303,22 +307,24 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		private static function isValidToken($token)
 		{
-			if (!isset($_SESSION[self::$config['CSRFP_TOKEN']])) {
+			if (self::issetSession() === false) {
 				return false;
 			}
-			if (!is_array($_SESSION[self::$config['CSRFP_TOKEN']])) {
+			$session = self::getSessionValue();
+			if ($session === false) {
 				return false;
 			}
-			foreach ($_SESSION[self::$config['CSRFP_TOKEN']] as $key => $value) {
+			foreach ($session as $key => $value) {
 				if ($value == $token) {
 
 					// Clear all older tokens assuming they have been consumed
-					foreach ($_SESSION[self::$config['CSRFP_TOKEN']] as $_key => $_value) {
+					foreach ($session as $_key => $_value) {
 						if ($_value == $token) {
 							break;
 						}
-						array_shift($_SESSION[self::$config['CSRFP_TOKEN']]);
+						array_shift($session);
 					}
+					self::setSessionValue($session);
 					return true;
 				}
 			}
@@ -377,13 +383,14 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		{
 			$token = self::generateAuthToken();
 
-			if (!isset($_SESSION[self::$config['CSRFP_TOKEN']])
-				|| !is_array($_SESSION[self::$config['CSRFP_TOKEN']])) {
-				$_SESSION[self::$config['CSRFP_TOKEN']] = [];
+			if (self::issetSession() === false || is_array(self::getSessionValue()) === false) {
+				self::setSessionValue([]);
 			}
 
 			// set token to session for server side validation
-			array_push($_SESSION[self::$config['CSRFP_TOKEN']], $token);
+			$session = self::getSessionValue();
+			array_push($session, $token);
+			self::setSessionValue($session);
 
 			// set token to cookie for client side processing
 			if (self::$cookieConfig === null) {
@@ -554,5 +561,73 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			}
 			return true;
 		}
+
+		/**
+		 * @return \Predis\Client
+		 */
+		private static function getRedisClient()
+		{
+			if (self::$redisClient === null) {
+				self::$redisClient = new \Predis\Client(array(
+					'scheme' => 'tcp',
+					'host' => self::$config['redis']['host'],
+					'port' => self::$config['redis']['port'],
+				));
+			}
+			return self::$redisClient;
+		}
+
+		/**
+		 * @return bool
+		 */
+		private static function issetSession()
+		{
+			$allowRedis = self::$config['redis'];
+
+			if ($allowRedis === false) {
+				return isset($_SESSION[self::$config['CSRFP_TOKEN']]);
+			} else {
+				$client = self::getRedisClient();
+				$session = $client->get(self::$config['CSRFP_TOKEN']);
+				return $session !== null;
+			}
+		}
+
+		/**
+		 * @return bool|string
+		 */
+		private static function getSessionValue()
+		{
+			$allowRedis = self::$config['redis'];
+
+			if (self::issetSession() === false) {
+				return false;
+			}
+
+			if ($allowRedis === false) {
+				if (is_array($_SESSION[self::$config['CSRFP_TOKEN']]) === false) {
+					return false;
+				}
+				return $_SESSION[self::$config['CSRFP_TOKEN']];
+			} else {
+				$client = self::getRedisClient();
+				$session = $session = $client->get(self::$config['CSRFP_TOKEN']);
+				if (is_array($session) === false) {
+					return false;
+				}
+				return $session;
+			}
+		}
+
+		private static function setSessionValue($value)
+		{
+			$allowRedis = self::$config['redis'];
+
+			if ($allowRedis === false) {
+				$_SESSION[self::$config['CSRFP_TOKEN']] = $value;
+			} else {
+				$client = self::getRedisClient();
+				$client->set(self::$config['CSRFP_TOKEN'], $value, 0, self::$config['redis']['expire']);
+			}
+		}
 	}
-}

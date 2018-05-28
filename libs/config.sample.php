@@ -22,4 +22,10 @@ return array(
 	"verifyGetFor" => array(),
 	"referers" => array(),
 	"agentURIs" => array(),
+	"redis" => array(
+		"allow" => false,
+		"host" => "localhost",
+		"port" => 6379,
+		"expire" => 90*60,
+	),
 );

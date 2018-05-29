@@ -18,15 +18,25 @@ if (!defined('__CSRF_PROTECTOR__')) {
 	define("CSRFP_FIELD_TOKEN_NAME", "csrfp_hidden_data_token");
 	define("CSRFP_FIELD_URLS", "csrfp_hidden_data_urls");
 
-	class configFileNotFoundException extends \Exception {}
+	class configFileNotFoundException extends \Exception
+	{
+	}
 
-	class jsFileNotFoundException extends \Exception {}
+	class jsFileNotFoundException extends \Exception
+	{
+	}
 
-	class baseJSFileNotFoundExceptio extends \Exception {}
+	class baseJSFileNotFoundExceptio extends \Exception
+	{
+	}
 
-	class incompleteConfigurationException extends \Exception {}
+	class incompleteConfigurationException extends \Exception
+	{
+	}
 
-	class alreadyInitializedException extends \Exception {}
+	class alreadyInitializedException extends \Exception
+	{
+	}
 
 	class csrfProtector
 	{
@@ -196,8 +206,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			if (isset($_COOKIE[self::$config['CSRFP_TOKEN']]) === false
 				|| self::issetSession() === false
 				|| self::getSessionValue() === false
-				|| in_array($_COOKIE[self::$config['CSRFP_TOKEN']], self::getSessionValue()) === false)
-			{
+				|| in_array($_COOKIE[self::$config['CSRFP_TOKEN']], self::getSessionValue()) === false) {
 				self::refreshToken();
 			}
 		}
@@ -568,11 +577,11 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		private static function getRedisClient()
 		{
 			if (self::$redisClient === null) {
-				self::$redisClient = new \Predis\Client(array(
+				self::$redisClient = new \Predis\Client([
 					'scheme' => 'tcp',
 					'host' => self::$config['redis']['host'],
 					'port' => self::$config['redis']['port'],
-				));
+				]);
 			}
 			return self::$redisClient;
 		}
@@ -631,3 +640,4 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			}
 		}
 	}
+}

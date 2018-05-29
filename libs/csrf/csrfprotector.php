@@ -571,6 +571,20 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		}
 
 		/**
+		 * @return bool
+		 */
+		private static function isRedisAllow()
+		{
+			$allow = false;
+			if (isset(self::$config['redis']) === true) {
+				if (isset(self::$config['redis']['allow'])) {
+					$allow = self::$config['redis']['allow'];
+				}
+			}
+			return $allow;
+		}
+
+		/**
 		 * @return \Predis\Client
 		 */
 		private static function getRedisClient()
@@ -580,6 +594,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 					'scheme' => 'tcp',
 					'host' => self::$config['redis']['host'],
 					'port' => self::$config['redis']['port'],
+					'timeout' => self::$config['redis']['timeout'],
 				]);
 			}
 			return self::$redisClient;
@@ -590,9 +605,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		private static function issetSession()
 		{
-			$allowRedis = self::$config['redis']['allow'];
-
-			if ($allowRedis === false) {
+			if (self::isRedisAllow() === false) {
 				return isset($_SESSION[self::$config['CSRFP_TOKEN']]);
 			} else {
 				$client = self::getRedisClient();
@@ -606,20 +619,18 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		private static function getSessionValue()
 		{
-			$allowRedis = self::$config['redis']['allow'];
-
 			if (self::issetSession() === false) {
 				return false;
 			}
 
-			if ($allowRedis === false) {
+			if (self::isRedisAllow() === false) {
 				if (is_array($_SESSION[self::$config['CSRFP_TOKEN']]) === false) {
 					return false;
 				}
 				return $_SESSION[self::$config['CSRFP_TOKEN']];
 			} else {
 				$client = self::getRedisClient();
-				$session = $session = $client->get(self::$config['CSRFP_TOKEN']);
+				$session = json_decode($client->get(self::$config['CSRFP_TOKEN']));
 				if (is_array($session) === false) {
 					return false;
 				}
@@ -629,13 +640,11 @@ if (!defined('__CSRF_PROTECTOR__')) {
 
 		private static function setSessionValue($value)
 		{
-			$allowRedis = self::$config['redis']['allow'];
-
-			if ($allowRedis === false) {
+			if (self::isRedisAllow() === false) {
 				$_SESSION[self::$config['CSRFP_TOKEN']] = $value;
 			} else {
 				$client = self::getRedisClient();
-				$client->set(self::$config['CSRFP_TOKEN'], $value, 0, self::$config['redis']['expire']);
+				$client->set(self::$config['CSRFP_TOKEN'], json_encode($value), 'ex', self::$config['redis']['expire']);
 			}
 		}
 	}

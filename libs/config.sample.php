@@ -27,5 +27,6 @@ return array(
 		"host" => "localhost",
 		"port" => 6379,
 		"expire" => 90*60,
+		"timeout" => 0.5,
 	),
 );

@@ -111,7 +111,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 * @throws incompleteConfigurationException
 		 * @throws logDirectoryNotFoundException
 		 */
-		public static function init($length = null, $action = null, $logger = null)
+		public static function init($length = null, $action = null, $logger = null, $configVersion = null)
 		{
 			/*
 			 * Check if init has already been called.
@@ -141,6 +141,10 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			 */
 			$standard_config_location = __DIR__ . "/../config.php";
 			$composer_config_location = __DIR__ . "/../../../../../config/csrf_config.php";
+
+			if ($configVersion !== null && is_string($configVersion) === true) {
+				$composer_config_location = __DIR__ . "/../../../../../config/csrf_config." . $configVersion . ".php";
+			}
 
 			if (file_exists($standard_config_location)) {
 				self::$config = include($standard_config_location);

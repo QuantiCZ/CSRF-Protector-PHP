@@ -590,12 +590,29 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		private static function getRedisClient()
 		{
 			if (self::$redisClient === null) {
-				self::$redisClient = new \Predis\Client([
-					'scheme' => 'tcp',
-					'host' => self::$config['redis']['host'],
-					'port' => self::$config['redis']['port'],
-					'timeout' => self::$config['redis']['timeout'],
-				]);
+				$redisConfig = self::$config['redis'];
+				$setings = [
+					'scheme',
+					'host',
+					'port',
+					'path',
+					'database',
+					'password',
+					'async',
+					'persistent',
+					'timeout',
+					'read_write_timeout',
+					'alias',
+					'weight',
+					'iterable_multibulk',
+					'throw_errors',
+				];
+				foreach ($setings as $key) {
+					if (isset($redisConfig[$key]) === true) {
+						$config[$key] = $redisConfig[$key];
+					}
+				}
+				self::$redisClient = new \Predis\Client($config);
 			}
 			return self::$redisClient;
 		}

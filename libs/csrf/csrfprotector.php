@@ -1,6 +1,5 @@
 <?php
 
-include __DIR__ . "/../../vendor/autoload.php";
 include __DIR__ . "/csrfpCookieConfig.php";
 include __DIR__ . "/csrfpDefaultLogger.php";
 include __DIR__ . "/csrfpAction.php";
@@ -591,7 +590,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		private static function issetSession()
 		{
-			$allowRedis = self::$config['redis'];
+			$allowRedis = self::$config['redis']['allow'];
 
 			if ($allowRedis === false) {
 				return isset($_SESSION[self::$config['CSRFP_TOKEN']]);
@@ -607,7 +606,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 */
 		private static function getSessionValue()
 		{
-			$allowRedis = self::$config['redis'];
+			$allowRedis = self::$config['redis']['allow'];
 
 			if (self::issetSession() === false) {
 				return false;
@@ -630,7 +629,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 
 		private static function setSessionValue($value)
 		{
-			$allowRedis = self::$config['redis'];
+			$allowRedis = self::$config['redis']['allow'];
 
 			if ($allowRedis === false) {
 				$_SESSION[self::$config['CSRFP_TOKEN']] = $value;

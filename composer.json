@@ -10,5 +10,8 @@
     },
     "autoload": {
         "classmap": ["libs/csrf/"]
+    },
+    "require": {
+        "predis/predis": "^1.1"
     }
 }

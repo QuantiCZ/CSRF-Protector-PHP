@@ -106,12 +106,14 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 * @param int $length Length of CSRF_AUTH_TOKEN to be generated
 		 * @param array $action Int array, for different actions to be taken in case of failed validation
 		 * @param LoggerInterface $logger Custom logger class object
+		 * @param $configVersion Specific version of config file
+		 * @param $configArray If used it, we don`t need config file
 		 * @throws alreadyInitializedException
 		 * @throws configFileNotFoundException
 		 * @throws incompleteConfigurationException
 		 * @throws logDirectoryNotFoundException
 		 */
-		public static function init($length = null, $action = null, $logger = null, $configVersion = null)
+		public static function init($length = null, $action = null, $logger = null, $configVersion = null, $configArray = null)
 		{
 			/*
 			 * Check if init has already been called.
@@ -139,19 +141,23 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			 * a config/csrf_config.php file in the root folder
 			 * for composer installations
 			 */
-			$standard_config_location = __DIR__ . "/../config.php";
-			$composer_config_location = __DIR__ . "/../../../../../config/csrf_config.php";
-
-			if ($configVersion !== null && is_string($configVersion) === true) {
-				$composer_config_location = __DIR__ . "/../../../../../config/csrf_config." . $configVersion . ".php";
-			}
-
-			if (file_exists($standard_config_location)) {
-				self::$config = include($standard_config_location);
-			} elseif (file_exists($composer_config_location)) {
-				self::$config = include($composer_config_location);
+			if ($configArray !== null && empty($configArray) === false) {
+				self::$config = $configArray;
 			} else {
-				throw new configFileNotFoundException("OWASP CSRFProtector: configuration file not found for CSRFProtector!");
+				$standard_config_location = __DIR__ . "/../config.php";
+				$composer_config_location = __DIR__ . "/../../../../../config/csrf_config.php";
+
+				if ($configVersion !== null && is_string($configVersion) === true) {
+					$composer_config_location = __DIR__ . "/../../../../../config/csrf_config." . $configVersion . ".php";
+				}
+
+				if (file_exists($standard_config_location)) {
+					self::$config = include($standard_config_location);
+				} elseif (file_exists($composer_config_location)) {
+					self::$config = include($composer_config_location);
+				} else {
+					throw new configFileNotFoundException("OWASP CSRFProtector: configuration file not found for CSRFProtector!");
+				}
 			}
 
 			//overriding length property if passed in parameters

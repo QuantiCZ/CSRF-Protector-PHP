@@ -43,5 +43,12 @@ if (!defined('__CSRF_PROTECTOR_csrfpAction__')) {
 		 * @var int
 		 */
 		const InternalServerErrorResponseAction = 4;
+
+		/**
+		 * Action of only log error
+		 *
+		 * @var int
+		 */
+		const OnlyLogError = 5;
 	}
 }

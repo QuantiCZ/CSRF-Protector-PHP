@@ -386,6 +386,8 @@ if (!defined('__CSRF_PROTECTOR__')) {
 					header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
 					exit("<h2>500 Internal Server Error!</h2>");
 					break;
+				case csrfpAction::OnlyLogError:
+					break;
 				default:
 					//unset the query parameters and forward
 					if (self::$requestType === 'GET') {

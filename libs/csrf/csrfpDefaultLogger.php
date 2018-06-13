@@ -64,7 +64,7 @@ if (!defined('__CSRF_PROTECTOR_csrfpDefaultLogger_')) {
 			$context['message'] = $message;
 
 			//convert log array to JSON format to be logged
-			$context = json_encode($context) . PHP_EOL;
+			$context = PHP_EOL . json_encode($context) . PHP_EOL;
 
 			//append log to the file
 			fwrite($logFile, $context);

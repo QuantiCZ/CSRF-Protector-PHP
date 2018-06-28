@@ -524,10 +524,20 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		{
 			//miniature version of the log
 			$context = [];
+			$context['IP'] = [
+				'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
+				'HTTP_X_REAL_IP' => $_SERVER['HTTP_X_REAL_IP'],
+				'HTTP_X_FORWARDED_FOR' => $_SERVER['HTTP_X_FORWARDED_FOR'],
+			];
 			$context['HOST'] = $_SERVER['HTTP_HOST'];
 			$context['REQUEST_URI'] = $_SERVER['REQUEST_URI'];
-			$context['requestType'] = self::$requestType;
-			$context['cookie'] = $_COOKIE;
+			$context['METHOD'] = self::$requestType;
+			$context['TOKENS'] = [
+				'POST' => isset($_POST[self::$config['CSRFP_TOKEN']]) ? $_POST[self::$config['CSRFP_TOKEN']] : null,
+				'COOKIE' => isset($_COOKIE[self::$config['CSRFP_TOKEN']]) ? $_COOKIE[self::$config['CSRFP_TOKEN']] : null,
+				'GET' => isset($_GET[self::$config['CSRFP_TOKEN']]) ? $_GET[self::$config['CSRFP_TOKEN']] : null,
+				'SESSION' => self::getSessionValue(),
+			];
 
 			self::$logger->log("OWASP CSRF PROTECTOR VALIDATION FAILURE", $context);
 		}

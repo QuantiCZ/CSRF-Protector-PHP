@@ -525,9 +525,9 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			//miniature version of the log
 			$context = [];
 			$context['IP'] = [
-				'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'],
-				'HTTP_X_REAL_IP' => $_SERVER['HTTP_X_REAL_IP'],
-				'HTTP_X_FORWARDED_FOR' => $_SERVER['HTTP_X_FORWARDED_FOR'],
+				'REMOTE_ADDR' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
+				'HTTP_X_REAL_IP' => isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : null,
+				'HTTP_X_FORWARDED_FOR' => isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : null,
 			];
 			$context['HOST'] = $_SERVER['HTTP_HOST'];
 			$context['REQUEST_URI'] = $_SERVER['REQUEST_URI'];

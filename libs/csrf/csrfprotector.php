@@ -205,7 +205,9 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			}
 
 			// Authorise the incoming request
-			self::authorizePost();
+			if (self::isURLExcluded() === false) {
+				self::authorizePost();
+			}
 
 			// Initialize output buffering handler
 			if (!defined('__TESTING_CSRFP__')) {
@@ -532,11 +534,26 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			$context['HOST'] = $_SERVER['HTTP_HOST'];
 			$context['REQUEST_URI'] = $_SERVER['REQUEST_URI'];
 			$context['METHOD'] = self::$requestType;
+
+			$postToken = isset($_POST[self::$config['CSRFP_TOKEN']]) ? $_POST[self::$config['CSRFP_TOKEN']] : null;
+			$cookieToken = isset($_COOKIE[self::$config['CSRFP_TOKEN']]) ? $_COOKIE[self::$config['CSRFP_TOKEN']] : null;
+			$getToken = isset($_GET[self::$config['CSRFP_TOKEN']]) ? $_GET[self::$config['CSRFP_TOKEN']] : null;
+
+			$sessionValue = self::getSessionValue();
+			if (is_array($sessionValue) === true) {
+				$sessionData = [
+					'POST' => in_array($postToken, $sessionValue),
+					'COOKIE' => in_array($cookieToken, $sessionValue),
+					'GET' => in_array($getToken, $sessionValue),
+				];
+			} else {
+				$sessionData = $sessionValue;
+			}
 			$context['TOKENS'] = [
-				'POST' => isset($_POST[self::$config['CSRFP_TOKEN']]) ? $_POST[self::$config['CSRFP_TOKEN']] : null,
-				'COOKIE' => isset($_COOKIE[self::$config['CSRFP_TOKEN']]) ? $_COOKIE[self::$config['CSRFP_TOKEN']] : null,
-				'GET' => isset($_GET[self::$config['CSRFP_TOKEN']]) ? $_GET[self::$config['CSRFP_TOKEN']] : null,
-				'SESSION' => self::getSessionValue(),
+				'POST' => $postToken,
+				'COOKIE' => $cookieToken,
+				'GET' => $getToken,
+				'SESSION' => $sessionData,
 			];
 
 			self::$logger->log("OWASP CSRF PROTECTOR VALIDATION FAILURE", $context);
@@ -590,6 +607,21 @@ if (!defined('__CSRF_PROTECTOR__')) {
 				}
 			}
 			return true;
+		}
+
+		/**
+		 * @return bool
+		 */
+		public static function isURLExcluded()
+		{
+			foreach (self::$config['excluded'] as $key => $value) {
+				$value = str_replace(['/', '*'], ['\/', '(.*)'], $value);
+				preg_match('/' . $value . '/', $_SERVER['REQUEST_URI'], $output);
+				if (count($output) > 0) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/**
@@ -654,7 +686,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		}
 
 		/**
-		 * @return bool|string
+		 * @return bool|array|string
 		 */
 		private static function getSessionValue()
 		{
@@ -677,6 +709,9 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			}
 		}
 
+		/**
+		 * @param $value
+		 */
 		private static function setSessionValue($value)
 		{
 			if (self::isRedisAllow() === false) {

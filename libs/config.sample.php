@@ -21,6 +21,7 @@ return array(
 	"verifyGetForPost" => array(),
 	"verifyGetFor" => array(),
 	"referers" => array(),
+	"excluded" => array(),
 	"agentURIs" => array(),
 	"redis" => array(
 		"allow" => false,

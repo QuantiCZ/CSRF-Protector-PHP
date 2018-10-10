@@ -526,6 +526,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		{
 			//miniature version of the log
 			$context = [];
+			$context['WHEN'] = date('Y-m-d H:i:s');
 			$context['IP'] = [
 				'REMOTE_ADDR' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
 				'HTTP_X_REAL_IP' => isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : null,

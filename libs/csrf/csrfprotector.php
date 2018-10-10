@@ -100,7 +100,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		 *
 		 * @var array
 		 */
-		public static $requiredConfigurations = ['logDirectory', 'failedAuthAction', 'jsUrl', 'tokenLength'];
+		public static $requiredConfigurations = ['logDirectory', 'failedAuthAction', 'tokenLength'];
 
 		/**
 		 * @param int $length Length of CSRF_AUTH_TOKEN to be generated

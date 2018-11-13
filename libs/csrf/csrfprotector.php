@@ -526,7 +526,6 @@ if (!defined('__CSRF_PROTECTOR__')) {
 		{
 			//miniature version of the log
 			$context = [];
-			$context['WHEN'] = date('Y-m-d H:i:s');
 			$context['IP'] = [
 				'REMOTE_ADDR' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null,
 				'HTTP_X_REAL_IP' => isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : null,
@@ -534,7 +533,8 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			];
 			$context['HOST'] = $_SERVER['HTTP_HOST'];
 			$context['REQUEST_URI'] = $_SERVER['REQUEST_URI'];
-			$context['METHOD'] = self::$requestType;
+			$context['USER_AGENT'] = $_SERVER['HTTP_USER_AGENT'];
+			$context['METHOD'] = self::$requestType . '(' . $_SERVER['REQUEST_METHOD'] . ')';
 
 			$postToken = isset($_POST[self::$config['CSRFP_TOKEN']]) ? $_POST[self::$config['CSRFP_TOKEN']] : null;
 			$cookieToken = isset($_COOKIE[self::$config['CSRFP_TOKEN']]) ? $_COOKIE[self::$config['CSRFP_TOKEN']] : null;

@@ -533,6 +533,7 @@ if (!defined('__CSRF_PROTECTOR__')) {
 			];
 			$context['HOST'] = $_SERVER['HTTP_HOST'];
 			$context['REQUEST_URI'] = $_SERVER['REQUEST_URI'];
+			$context['REFERER'] = $_SERVER['HTTP_REFERER'];
 			$context['USER_AGENT'] = $_SERVER['HTTP_USER_AGENT'];
 			$context['METHOD'] = self::$requestType . '(' . $_SERVER['REQUEST_METHOD'] . ')';
 
